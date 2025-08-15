@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileWatcherInitializer {
 
-    private final FileWatcher fileWatcher;
+    private final SendFileWatcher fileWatcher;
 
-    public FileWatcherInitializer(FileWatcher fileWatcher) {
+    public FileWatcherInitializer(SendFileWatcher fileWatcher) {
         this.fileWatcher = fileWatcher;
     }
 

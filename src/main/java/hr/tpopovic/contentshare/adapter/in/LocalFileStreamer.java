@@ -3,9 +3,9 @@ package hr.tpopovic.contentshare.adapter.in;
 import hr.tpopovic.contentshare.application.domain.model.FileInTransit;
 import hr.tpopovic.contentshare.application.port.out.FileUploadResult;
 import hr.tpopovic.contentshare.application.port.out.ForFileUpload;
-import org.apache.tomcat.util.threads.VirtualThreadExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Component
 public class LocalFileStreamer {
 
     private final ForFileUpload forFileUpload;

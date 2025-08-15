@@ -3,3 +3,5 @@ spring.application.name: content-share
 content-share:
   file-watcher:
     directory: ${FILE_WATCHER_DIRECTORY:send}
+  file-uploader:
+    upload-url: ${FILE_UPLOADER_URL}

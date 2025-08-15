@@ -8,14 +8,15 @@ import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
 @Component
-public class FileWatcher {
+public class SendFileWatcher {
 
+    private final LocalFileStreamer localFileStreamer;
     private final Path pathToWatch;
 
-    public FileWatcher(FileWatcherProperties properties) {
+    public SendFileWatcher(LocalFileStreamer localFileStreamer, FileWatcherProperties properties) {
+        this.localFileStreamer = localFileStreamer;
         this.pathToWatch = Path.of(properties.directory());
     }
-
 
     public void initWatch() {
         try(WatchService watchService = FileSystems.getDefault().newWatchService()) {
@@ -36,10 +37,11 @@ public class FileWatcher {
         key.pollEvents()
                 .stream()
                 .filter(event -> event.kind() == ENTRY_CREATE)
-                .map(FileWatcher::castToPathEvent)
+                .map(SendFileWatcher::castToPathEvent)
                 .map(WatchEvent::context)
                 .filter(path -> !path.toFile().isDirectory())
-                .forEach(System.out::println); //todo: replace with actual processing logic
+                .map(pathToWatch::resolve)
+                .forEach(localFileStreamer::streamToRemote);
 
         resetKey(key);
     }
