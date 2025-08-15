@@ -2,4 +2,4 @@ spring.application.name: content-share
 
 content-share:
   file-watcher:
-    directory: ${FILE_WATCHER_DIRECTORY:inbound}
+    directory: ${FILE_WATCHER_DIRECTORY:send}

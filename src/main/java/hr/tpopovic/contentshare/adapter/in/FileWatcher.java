@@ -8,11 +8,11 @@ import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
 @Component
-public class InboundFileWatcher {
+public class FileWatcher {
 
     private final Path pathToWatch;
 
-    public InboundFileWatcher(FileWatcherProperties properties) {
+    public FileWatcher(FileWatcherProperties properties) {
         this.pathToWatch = Path.of(properties.directory());
     }
 
@@ -36,7 +36,7 @@ public class InboundFileWatcher {
         key.pollEvents()
                 .stream()
                 .filter(event -> event.kind() == ENTRY_CREATE)
-                .map(InboundFileWatcher::castToPathEvent)
+                .map(FileWatcher::castToPathEvent)
                 .map(WatchEvent::context)
                 .forEach(System.out::println); //todo: replace with actual processing logic
 

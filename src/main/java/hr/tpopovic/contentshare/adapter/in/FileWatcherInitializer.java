@@ -7,17 +7,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileWatcherInitializer {
 
-    private final InboundFileWatcher inboundFileWatcher;
+    private final FileWatcher fileWatcher;
 
-    public FileWatcherInitializer(InboundFileWatcher inboundFileWatcher) {
-        this.inboundFileWatcher = inboundFileWatcher;
+    public FileWatcherInitializer(FileWatcher fileWatcher) {
+        this.fileWatcher = fileWatcher;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void initFileWatcher() {
         Thread.ofVirtual()
                 .name("file-watcher-thread")
-                .start(inboundFileWatcher::initWatch);
+                .start(fileWatcher::initWatch);
     }
 
 }
