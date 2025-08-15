@@ -1,5 +1,6 @@
 package hr.tpopovic.contentshare.adapter.in;
 
+import hr.tpopovic.contentshare.application.domain.model.FileInTransit;
 import org.apache.tomcat.util.threads.VirtualThreadExecutor;
 
 import java.io.IOException;
@@ -24,7 +25,8 @@ public class LocalFileStreamer {
     private void streamFile(Path filePath) {
         // todo: wait for file to be ready (finish copying...)
         try(InputStream inputStream = Files.newInputStream(filePath)) {
-
+            String fileName = filePath.getFileName().toString();
+            FileInTransit fileInTransit = new FileInTransit(inputStream, fileName);
         } catch (IOException e) {
             throw new FileStreamException(e);
         }
