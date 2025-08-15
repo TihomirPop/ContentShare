@@ -38,6 +38,7 @@ public class FileWatcher {
                 .filter(event -> event.kind() == ENTRY_CREATE)
                 .map(FileWatcher::castToPathEvent)
                 .map(WatchEvent::context)
+                .filter(path -> !path.toFile().isDirectory())
                 .forEach(System.out::println); //todo: replace with actual processing logic
 
         resetKey(key);
