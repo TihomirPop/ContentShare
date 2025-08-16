@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,23 +19,26 @@ import java.util.concurrent.Executors;
 public class LocalFileStreamer {
 
     private final ForFileUpload forFileUpload;
+    private final FileSizeChangeChecker changeChecker;
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
     private final Logger log = LoggerFactory.getLogger(LocalFileStreamer.class);
 
-    public LocalFileStreamer(ForFileUpload forFileUpload) {
+    public LocalFileStreamer(ForFileUpload forFileUpload, FileSizeChangeChecker changeChecker) {
         this.forFileUpload = forFileUpload;
+        this.changeChecker = changeChecker;
     }
 
     public void streamToRemote(Path filePath) {
-        if (!Files.exists(filePath)) {
-            throw new FileStreamException("File does not exist: " + filePath);
-        }
-
         executorService.submit(() -> streamFile(filePath));
     }
 
     private void streamFile(Path filePath) {
-        // todo: wait for file to be ready (finish copying...)
+        if (!Files.exists(filePath)) {
+            throw new FileStreamException("File does not exist: " + filePath);
+        }
+
+        changeChecker.waitUntilStable(filePath, Duration.ofMillis(500));
+
         try(InputStream inputStream = Files.newInputStream(filePath)) {
             String fileName = filePath.getFileName().toString();
             FileInTransit fileInTransit = new FileInTransit(inputStream, fileName);
@@ -44,8 +48,7 @@ public class LocalFileStreamer {
                 case FileUploadResult.Failure _ -> log.error("Failed to upload file: {}", fileName);
                 case FileUploadResult.Success _ -> log.info("Successfully uploaded file: {}", fileName);
             }
-        }
-            catch (IOException e) {
+        } catch (IOException e) {
             throw new FileStreamException(e);
         }
     }
