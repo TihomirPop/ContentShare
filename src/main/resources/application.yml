@@ -1,4 +1,6 @@
-spring.application.name: content-share
+spring:
+  application.name: content-share
+  threads.virtual.enabled: true
 
 content-share:
   send-directory: ${SEND_DIRECTORY:send}
