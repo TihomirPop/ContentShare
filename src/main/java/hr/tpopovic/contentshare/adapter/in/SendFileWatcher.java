@@ -1,5 +1,6 @@
 package hr.tpopovic.contentshare.adapter.in;
 
+import hr.tpopovic.contentshare.ContentShareProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -13,9 +14,9 @@ public class SendFileWatcher {
     private final LocalFileStreamer localFileStreamer;
     private final Path pathToWatch;
 
-    public SendFileWatcher(LocalFileStreamer localFileStreamer, FileWatcherProperties properties) {
+    public SendFileWatcher(LocalFileStreamer localFileStreamer, ContentShareProperties properties) {
         this.localFileStreamer = localFileStreamer;
-        this.pathToWatch = Path.of(properties.directory());
+        this.pathToWatch = Path.of(properties.sendDirectory());
     }
 
     public void initWatch() {

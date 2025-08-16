@@ -1,5 +1,7 @@
 package hr.tpopovic.contentshare.adapter.out;
 
+import hr.tpopovic.contentshare.ApiEndpoint;
+import hr.tpopovic.contentshare.ContentShareProperties;
 import hr.tpopovic.contentshare.application.domain.model.FileInTransit;
 import hr.tpopovic.contentshare.application.port.out.FileUploadResult;
 import hr.tpopovic.contentshare.application.port.out.ForFileUpload;
@@ -24,10 +26,11 @@ public class FileUploader implements ForFileUpload {
     private final RestTemplate restTemplate;
     private final URI uploadUrl;
 
-    public FileUploader(FileUploaderProperties properties) {
+    public FileUploader(ContentShareProperties properties) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         this.restTemplate = new RestTemplate(requestFactory);
-        this.uploadUrl = URI.create(properties.uploadUrl());
+        this.uploadUrl = URI.create(properties.baseUrl())
+                .resolve(ApiEndpoint.CONTENT.path());
     }
 
     @Override
