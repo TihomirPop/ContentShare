@@ -3,16 +3,19 @@ package hr.tpopovic.contentshare.adapter.in;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 
 @Component
 public class FileSizeChangeChecker {
 
-    public void waitUntilStable(Path filePath, Duration waitInterval) {
+    public Long waitUntilStable(Path filePath, Duration waitInterval) {
+        waitUntilFileIsReadable(filePath, waitInterval);
         try {
-            wait(filePath, waitInterval);
+            return wait(filePath, waitInterval);
         } catch (IOException e) {
             throw new FileStreamException(e);
         } catch (InterruptedException e) {
@@ -21,7 +24,31 @@ public class FileSizeChangeChecker {
         }
     }
 
-    private static void wait(Path filePath, Duration waitInterval) throws IOException, InterruptedException {
+    private void waitUntilFileIsReadable(Path file, Duration waitInterval) {
+        int maxRetries = 1000;
+        int retryCount = 0;
+
+        while (retryCount < maxRetries) {
+            try (var _ = FileChannel.open(file, StandardOpenOption.READ)) {
+                // Successfully opened = file is no longer locked
+                return;
+            } catch (IOException _) {
+                // File still locked or being written
+                retryCount++;
+                try {
+                    Thread.sleep(waitInterval);
+                } catch (InterruptedException _) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
+        throw new FileStreamException("File is not readable after multiple attempts: " + file);
+    }
+
+
+    private Long wait(Path filePath, Duration waitInterval) throws IOException, InterruptedException {
         long previousSize = -1;
         int stableCount = 0;
 
@@ -30,7 +57,7 @@ public class FileSizeChangeChecker {
             if (currentSize == previousSize) {
                 stableCount++;
                 if (stableCount >= 3) {
-                    break;
+                    return currentSize;
                 }
             } else {
                 stableCount = 0;
