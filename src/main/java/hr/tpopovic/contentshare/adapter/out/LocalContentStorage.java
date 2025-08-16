@@ -24,10 +24,12 @@ public class LocalContentStorage implements ContentStorage {
     @Override
     public ContentStoreResult store(FileInTransit fileInTransit) {
         String fileName = fileInTransit.fileName();
-        Path filePath = storagePath.resolve(fileName);
+        Path tmpFilePath = storagePath.resolve(fileName + ".tmp");
 
-        try(InputStream in = fileInTransit.data(); OutputStream out = Files.newOutputStream(filePath)) {
+        try(InputStream in = fileInTransit.data(); OutputStream out = Files.newOutputStream(tmpFilePath)) {
             in.transferTo(out);
+            Path filePath = tmpFilePath.resolveSibling(fileName);
+            Files.move(tmpFilePath, filePath);
             return new ContentStoreResult.Success();
         } catch (IOException _) {
             return new ContentStoreResult.Failure();
