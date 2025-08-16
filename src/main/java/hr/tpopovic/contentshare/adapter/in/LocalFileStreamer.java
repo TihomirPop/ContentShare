@@ -37,11 +37,12 @@ public class LocalFileStreamer {
             throw new FileStreamException("File does not exist: " + filePath);
         }
 
-        changeChecker.waitUntilStable(filePath, Duration.ofMillis(500));
+        Long fileSize = changeChecker.waitUntilStable(filePath, Duration.ofMillis(500));
 
-        try(InputStream inputStream = Files.newInputStream(filePath)) {
+        try {
+            InputStream data = Files.newInputStream(filePath);
             String fileName = filePath.getFileName().toString();
-            FileInTransit fileInTransit = new FileInTransit(inputStream, fileName);
+            FileInTransit fileInTransit = new FileInTransit(data, fileName, fileSize);
             FileUploadResult result = forFileUpload.upload(fileInTransit);
 
             switch (result) {

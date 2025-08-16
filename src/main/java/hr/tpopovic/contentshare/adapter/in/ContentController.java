@@ -1,5 +1,6 @@
 package hr.tpopovic.contentshare.adapter.in;
 
+import hr.tpopovic.contentshare.ApiEndpoint;
 import hr.tpopovic.contentshare.CustomHeader;
 import hr.tpopovic.contentshare.application.domain.model.FileInTransit;
 import hr.tpopovic.contentshare.application.port.in.ContentSaveResult;
@@ -13,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
 
+
 @RestController
-@RequestMapping("/api/content")
+@RequestMapping(ApiEndpoint.CONTENT_PATH)
 public class ContentController {
 
     private final ForContentSaving forContentSaving;
@@ -28,9 +30,10 @@ public class ContentController {
         String fileName = request.getHeader(CustomHeader.FILE_NAME.headerName());
         FileInTransit fileInTransit;
         try {
-             fileInTransit = new FileInTransit(
+            fileInTransit = new FileInTransit(
                     request.getInputStream(),
-                    fileName
+                    fileName,
+                    request.getContentLengthLong()
             );
         } catch (NullPointerException | IllegalArgumentException _) {
             return ResponseEntity.badRequest().build();
@@ -43,4 +46,5 @@ public class ContentController {
             case ContentSaveResult.Failure _ -> ResponseEntity.internalServerError().build();
         };
     }
+
 }

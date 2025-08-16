@@ -6,7 +6,8 @@ import static java.util.Objects.requireNonNull;
 
 public record FileInTransit(
         InputStream data,
-        String fileName
+        String fileName,
+        Long fileSize
 ) {
 
     public FileInTransit {
@@ -14,6 +15,10 @@ public record FileInTransit(
         requireNonNull(fileName, "File name cannot be null");
         if (fileName.isBlank()) {
             throw new IllegalArgumentException("File name cannot be blank");
+        }
+        requireNonNull(fileSize, "File size cannot be null");
+        if (fileSize < 0) {
+            throw new IllegalArgumentException("File size cannot be negative");
         }
     }
 }

@@ -2,63 +2,56 @@ package hr.tpopovic.contentshare.adapter.out;
 
 import hr.tpopovic.contentshare.ApiEndpoint;
 import hr.tpopovic.contentshare.ContentShareProperties;
+import hr.tpopovic.contentshare.CustomHeader;
 import hr.tpopovic.contentshare.application.domain.model.FileInTransit;
 import hr.tpopovic.contentshare.application.port.out.FileUploadResult;
 import hr.tpopovic.contentshare.application.port.out.ForFileUpload;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
-
 
 @Component
 public class FileUploader implements ForFileUpload {
 
-    private final RestTemplate restTemplate;
+    private final CloseableHttpClient httpClient;
     private final URI uploadUrl;
 
     public FileUploader(ContentShareProperties properties) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        this.restTemplate = new RestTemplate(requestFactory);
+        this.httpClient = HttpClients.createDefault();
         this.uploadUrl = URI.create(properties.baseUrl())
                 .resolve(ApiEndpoint.CONTENT.path());
     }
 
     @Override
     public FileUploadResult upload(FileInTransit fileInTransit) {
-        String status = restTemplate.execute(
-                uploadUrl,
-                HttpMethod.POST,
-                request -> request(fileInTransit, request),
-                FileUploader::response
+        HttpPost post = new HttpPost(uploadUrl);
+        post.setHeader(CustomHeader.FILE_NAME.headerName(), fileInTransit.fileName());
+        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+
+        InputStreamEntity entity = new InputStreamEntity(
+                fileInTransit.data(),
+                fileInTransit.fileSize(),
+                ContentType.APPLICATION_OCTET_STREAM
         );
+        post.setEntity(entity);
 
-        return switch (status) {
-            case String s when s.startsWith("2") -> new FileUploadResult.Success();
-            case null, default -> new FileUploadResult.Failure();
-        };
-    }
-
-    private static void request(FileInTransit fileInTransit, ClientHttpRequest request) throws IOException {
-        HttpHeaders headers = request.getHeaders();
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        headers.set("X-File-Name", fileInTransit.fileName());
-        try (InputStream in = fileInTransit.data(); OutputStream out = request.getBody()) {
-            in.transferTo(out);
+        try {
+            return httpClient.execute(post, response -> {
+                int status = response.getCode();
+                return (status >= 200 && status < 300)
+                        ? new FileUploadResult.Success()
+                        : new FileUploadResult.Failure();
+            });
+        } catch (IOException _) {
+            return new FileUploadResult.Failure();
         }
     }
-
-    private static String response(ClientHttpResponse response) throws IOException {
-        return response.getStatusCode().toString();
-    }
-
 }
