@@ -40,7 +40,6 @@ public class ContentController {
         }
 
         ContentSaveResult result = forContentSaving.save(fileInTransit);
-
         return switch (result) {
             case ContentSaveResult.Success _ -> ResponseEntity.ok().build();
             case ContentSaveResult.Failure _ -> ResponseEntity.internalServerError().build();
